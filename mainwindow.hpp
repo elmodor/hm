@@ -20,6 +20,7 @@ public:
 
 public slots:
    void switchcall(const QString & name);
+   void searchcall(const QString & name);
    void areaButtonClicked();
    void animButtonClicked();
    void updateTableData(const QString & name);
@@ -31,6 +32,7 @@ private:
    QVBoxLayout *areaLay;
    QVBoxLayout *animLay;
    QStandardItemModel *tableData;
+   QStandardItemModel *searchData;
    std::vector<QPushButton*> areaButtons;
    std::vector<QPushButton*> animButtons;
    nlohmann::json j;

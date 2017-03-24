@@ -1,4 +1,4 @@
-#include "mainwindow.hpp"
+﻿#include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
 using json = nlohmann::json;
@@ -46,15 +46,26 @@ MainWindow::MainWindow(QWidget *parent) :
    areaLay = new QVBoxLayout();
    animLay = new QVBoxLayout();
    tableData = new QStandardItemModel();
+   searchData = new QStandardItemModel();
    ui->horizontalLayout->addLayout(areaLay);
    ui->horizontalLayout->addLayout(animLay);
+
    ui->tableView->setModel(tableData);
    tableData->setHorizontalHeaderItem(0, new QStandardItem("Name"));
    tableData->setHorizontalHeaderItem(1, new QStandardItem("Count"));
    tableData->setHorizontalHeaderItem(2, new QStandardItem("Percent"));
    ui->tableView->setSortingEnabled(false);
+   ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+   ui->tableView_2->setModel(searchData);
+   searchData->setHorizontalHeaderItem(0, new QStandardItem("Area"));
+   searchData->setHorizontalHeaderItem(1, new QStandardItem("Count"));
+   searchData->setHorizontalHeaderItem(2, new QStandardItem("Percent"));
+   ui->tableView_2->setSortingEnabled(true);
+   ui->tableView_2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
    connect(ui->comboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(switchcall(const QString&)));
+   connect(ui->comboBox_2, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(searchcall(const QString&)));
 
    int i = 0;
    for(auto&element : j)
@@ -67,9 +78,71 @@ MainWindow::MainWindow(QWidget *parent) :
    ui->horizontalLayout->setSpacing(50);
 }
 
+// TODO clear
+void
+MainWindow::searchcall(const QString & name)
+{
+   for(auto&element : j)
+   {
+      if(QString::fromStdString(element["name"]) == ui->comboBox->currentText())
+      {
+         int i = 0;
+         for( auto& area : element["area"] )
+         {
+            int amount = 0;
+            for( auto& anim : area["anim"] )
+            {
+               amount+= anim["count"].get<int>();
+            }
+
+            for( auto& anim : area["anim"] )
+            {
+               if(QString::fromStdString(anim["name"]) == name)
+               {
+                  QStandardItem *item = new QStandardItem();
+                  item->setData(QVariant(QString::fromStdString(area["name"])), Qt::DisplayRole);
+                  searchData->setItem(i, 0, item);
+
+                  QStandardItem *item2 = new QStandardItem();
+                  item2->setData(QVariant(anim["count"].get<int>()), Qt::DisplayRole);
+                  searchData->setItem(i, 1, item2);
+
+                  QStandardItem *item3 = new QStandardItem();
+                  float perc = ((float)anim["count"].get<int>() / (float)amount ) * 100;
+                  QString s = QString::number(perc, 'f', 2);
+                  s.append(QString(" %"));
+                  item3->setData(QVariant(s), Qt::DisplayRole);
+                  searchData->setItem(i, 2, item3);
+
+                  ++i;
+               }
+            }
+         }
+
+         searchData->sort(1, Qt::DescendingOrder);
+         ui->tableView_2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+         break;
+      }
+   }
+}
+
 void
 MainWindow::switchcall(const QString & name)
 {
+   tableData->clear();
+   searchData->clear();
+
+   tableData->setHorizontalHeaderItem(0, new QStandardItem("Name"));
+   tableData->setHorizontalHeaderItem(1, new QStandardItem("Count"));
+   tableData->setHorizontalHeaderItem(2, new QStandardItem("Percent"));
+   ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+   searchData->setHorizontalHeaderItem(0, new QStandardItem("Area"));
+   searchData->setHorizontalHeaderItem(1, new QStandardItem("Count"));
+   searchData->setHorizontalHeaderItem(2, new QStandardItem("Percent"));
+   ui->tableView_2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
    for(auto it = areaButtons.begin(); it != areaButtons.end(); )
    {
       (*it)->deleteLater();
@@ -101,6 +174,7 @@ MainWindow::switchcall(const QString & name)
          }
 
          i = 0;
+         ui->comboBox_2->clear();
          for( auto& anim : element["area"][0]["anim"] )
          {
             QString name = QString::fromStdString(anim["name"]);
@@ -111,13 +185,17 @@ MainWindow::switchcall(const QString & name)
             animLay->addWidget(btn);
             btn->show();
             connect(animButtons[i], SIGNAL(clicked()), this, SLOT(animButtonClicked()));
+
+            ui->comboBox_2->insertItem(i, name);
+
             ++i;
          }
+
+         ui->comboBox_2->setCurrentIndex(0);
 
          break;
       }
    }
-
 }
 
 void
@@ -188,10 +266,10 @@ MainWindow::animButtonClicked()
    }
 }
 
+// TODO clear
 void
 MainWindow::updateTableData(const QString &name)
 {
-   int i = 0;
    for(auto&element : j)
    {
       if(QString::fromStdString(element["name"]) == ui->comboBox->currentText())
@@ -200,6 +278,7 @@ MainWindow::updateTableData(const QString &name)
          {
             if( QString::fromStdString(area["name"]) == name)
             {
+               int i = 0;
                int amount = 0;
                for( auto& anim : area["anim"] )
                {
@@ -216,15 +295,28 @@ MainWindow::updateTableData(const QString &name)
                   item2->setData(QVariant(anim["count"].get<int>()), Qt::DisplayRole);
                   tableData->setItem(i, 1, item2);
 
-                  QStandardItem *item3 = new QStandardItem();
-                  float perc = ((float)anim["count"].get<int>() / (float)amount ) * 100;
-                  QString s = QString::number(perc, 'f', 2);
-                  s.append(QString(" %"));
-                  item3->setData(QVariant(s), Qt::DisplayRole);
-                  tableData->setItem(i, 2, item3);
+                  if(amount > 0)
+                  {
+                     QStandardItem *item3 = new QStandardItem();
+                     float perc = ((float)anim["count"].get<int>() / (float)amount ) * 100;
+                     QString s = QString::number(perc, 'f', 2);
+                     s.append(QString(" %"));
+                     item3->setData(QVariant(s), Qt::DisplayRole);
+                     tableData->setItem(i, 2, item3);
+                  }
 
                   ++i;
                }
+
+               tableData->sort(1, Qt::DescendingOrder);
+               ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+               if(tableData->rowCount() > i+1)
+               {
+                  // clear
+               }
+
+               searchcall(ui->comboBox_2->currentText());
 
                saveJson();
                break;
@@ -232,10 +324,6 @@ MainWindow::updateTableData(const QString &name)
          }
       }
    }
-
-   tableData->sort(1, Qt::DescendingOrder);
-   ui->tableView->resizeColumnsToContents();
-   ui->tableView->resizeRowsToContents();
 }
 
 void
@@ -243,6 +331,7 @@ MainWindow::loadJson()
 {
    std::ifstream i("config.json");
    i >> j;
+   i.close();
 }
 
 void
@@ -250,8 +339,9 @@ MainWindow::saveJson()
 {
    std::ofstream o("config.json.tmp");
    o << std::setw(4) << j << std::endl;
+   o.close();
 
-   // TODO
+   // TODO corrupt check
    std::remove("config.json");
    std::rename("config.json.tmp", "config.json");
 }
