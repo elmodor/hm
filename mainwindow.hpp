@@ -29,8 +29,6 @@ public slots:
 
 private:
    Ui::MainWindow *ui;
-   QVBoxLayout *areaLay;
-   QVBoxLayout *animLay;
    QStandardItemModel *tableData;
    QStandardItemModel *searchData;
    std::vector<QPushButton*> areaButtons;

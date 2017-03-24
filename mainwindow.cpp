@@ -43,12 +43,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
    loadJson();
 
-   areaLay = new QVBoxLayout();
-   animLay = new QVBoxLayout();
    tableData = new QStandardItemModel();
    searchData = new QStandardItemModel();
-   ui->horizontalLayout->addLayout(areaLay);
-   ui->horizontalLayout->addLayout(animLay);
 
    ui->tableView->setModel(tableData);
    tableData->setHorizontalHeaderItem(0, new QStandardItem("Name"));
@@ -166,8 +162,10 @@ MainWindow::switchcall(const QString & name)
             QPushButton *btn = new QPushButton(name);
             btn->setEnabled( true );
             btn->setObjectName(name);
+            btn->setMinimumHeight(30);
+            btn->setStyleSheet(":disabled { color: black; background-color:blue }");
             areaButtons.push_back(btn);
-            areaLay->addWidget(btn);
+            ui->verticalLayout_2->addWidget(btn);
             btn->show();
             connect(areaButtons[i], SIGNAL(clicked()), this, SLOT(areaButtonClicked()));
             ++i;
@@ -181,8 +179,9 @@ MainWindow::switchcall(const QString & name)
             QPushButton *btn = new QPushButton(name);
             btn->setEnabled( false );
             btn->setObjectName(name);
+            btn->setMinimumHeight(30);
             animButtons.push_back(btn);
-            animLay->addWidget(btn);
+            ui->verticalLayout->addWidget(btn);
             btn->show();
             connect(animButtons[i], SIGNAL(clicked()), this, SLOT(animButtonClicked()));
 
