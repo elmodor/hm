@@ -163,7 +163,7 @@ MainWindow::switchcall(const QString & name)
             btn->setEnabled( true );
             btn->setObjectName(name);
             btn->setMinimumHeight(30);
-            btn->setStyleSheet(":disabled { color: black; background-color:blue }");
+            btn->setStyleSheet(":disabled { color: black; background-color:#8080ff }");
             areaButtons.push_back(btn);
             ui->verticalLayout_2->addWidget(btn);
             btn->show();
@@ -180,6 +180,18 @@ MainWindow::switchcall(const QString & name)
             btn->setEnabled( false );
             btn->setObjectName(name);
             btn->setMinimumHeight(30);
+
+            if(anim["class"] == 0)
+               btn->setStyleSheet(":enabled { color: black; background-color:#cccccc }");
+            else if(anim["class"] == 1)
+               btn->setStyleSheet(":enabled { color: black; background-color:#99ff99 }");
+            else if(anim["class"] == 2)
+               btn->setStyleSheet(":enabled { color: black; background-color:#ffff99 }");
+            else if(anim["class"] == 3)
+               btn->setStyleSheet(":enabled { color: black; background-color:#ff9999 }");
+            else if(anim["class"] == 4)
+               btn->setStyleSheet(":enabled { color: black; background-color:#ff99cc }");
+
             animButtons.push_back(btn);
             ui->verticalLayout->addWidget(btn);
             btn->show();
@@ -329,7 +341,15 @@ void
 MainWindow::loadJson()
 {
    std::ifstream i("config.json");
-   i >> j;
+   try
+   {
+      i >> j;
+   }
+   catch(...)
+   {
+      //TODO handle error
+   }
+
    i.close();
 }
 
