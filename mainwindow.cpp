@@ -74,7 +74,6 @@ MainWindow::MainWindow(QWidget *parent) :
    ui->horizontalLayout->setSpacing(50);
 }
 
-// TODO clear
 void
 MainWindow::searchcall(const QString & name)
 {
@@ -117,6 +116,12 @@ MainWindow::searchcall(const QString & name)
 
          searchData->sort(1, Qt::DescendingOrder);
          ui->tableView_2->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+         if(searchData->rowCount() > i+1)
+         {
+            // clear
+            searchData->removeRows(i+1, searchData->rowCount()-(i+1));
+         }
 
          break;
       }
@@ -277,7 +282,6 @@ MainWindow::animButtonClicked()
    }
 }
 
-// TODO clear
 void
 MainWindow::updateTableData(const QString &name)
 {
@@ -325,6 +329,7 @@ MainWindow::updateTableData(const QString &name)
                if(tableData->rowCount() > i+1)
                {
                   // clear
+                  tableData->removeRows(i+1, tableData->rowCount()-(i+1));
                }
 
                searchcall(ui->comboBox_2->currentText());
@@ -347,7 +352,9 @@ MainWindow::loadJson()
    }
    catch(...)
    {
-      //TODO handle error
+      QMessageBox messageBox;
+      messageBox.critical(0,"Error","No config file found");
+      messageBox.setFixedSize(500,200);
    }
 
    i.close();
@@ -357,12 +364,20 @@ void
 MainWindow::saveJson()
 {
    std::ofstream o("config.json.tmp");
-   o << std::setw(4) << j << std::endl;
-   o.close();
+   try
+   {
+      o << std::setw(4) << j << std::endl;
+      o.close();
 
-   // TODO corrupt check
-   std::remove("config.json");
-   std::rename("config.json.tmp", "config.json");
+      // TODO corrupt check
+      std::remove("config.json");
+      std::rename("config.json.tmp", "config.json");
+   }
+
+   catch(...)
+   {
+      o.close();
+   }
 }
 
 MainWindow::~MainWindow()
